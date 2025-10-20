@@ -1,8 +1,10 @@
+// next.config.ts (TypeScript)
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   experimental: {
-    ppr: "incremental",
+    // PPR is now enabled via cacheComponents
+    cacheComponents: true,
   },
 };
 
