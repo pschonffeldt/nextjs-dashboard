@@ -113,12 +113,35 @@ export async function updateInvoice(
   redirect("/dashboard/invoices");
 }
 
-export async function deleteInvoice(id: string) {
-  throw new Error("Failed to Delete Invoice");
+// export async function deleteInvoice(id: string) {
+//   await sql`DELETE FROM invoices WHERE id = ${id}`;
+//   revalidatePath("/dashboard/invoices");
+// }
 
-  // Unreachable code block
-  await sql`DELETE FROM invoices WHERE id = ${id}`;
-  revalidatePath("/dashboard/invoices");
+export type ActionResult = { message?: string };
+
+export async function deleteInvoice(id: string): Promise<void> {
+  try {
+    const deleted = await sql/* sql */ `
+      DELETE FROM invoices
+      WHERE id = ${id}
+      RETURNING id
+    `;
+    if (deleted.length === 0) {
+      // Optional: throw to hit your error boundary
+      // throw new Error("Invoice not found.");
+      return;
+    }
+    revalidatePath("/dashboard/invoices");
+  } catch (err: any) {
+    if (err?.code === "23503") {
+      throw new Error(
+        "Cannot delete this invoice because it’s referenced by other records."
+      );
+    }
+    console.error("deleteInvoice error:", err);
+    throw new Error("Database Error: Failed to delete invoice.");
+  }
 }
 
 export async function authenticate(
